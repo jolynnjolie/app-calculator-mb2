@@ -590,6 +590,17 @@
       gap: 8px;
     }
 
+    .history-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--calc-border);
+      letter-spacing: 0.02em;
+    }
+
     .history-actions {
       display: flex;
       align-items: center;
@@ -922,6 +933,7 @@
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
             <span>Riwayat Perhitungan</span>
+            <span class="history-badge" id="historyBadge">0/10</span>
           </div>
           <div class="history-actions">
             <button class="tool-btn" id="btnClearHistory" title="Bersihkan Riwayat">
@@ -987,7 +999,15 @@
         this.isDegree = true;
         this.memoryValue = 0;
         this.soundEnabled = true;
-        this.history = JSON.parse(localStorage.getItem('calc_history') || '[]');
+        try {
+          const saved = JSON.parse(localStorage.getItem('calc_history') || '[]');
+          this.history = Array.isArray(saved) ? saved.slice(0, 10) : [];
+          if (Array.isArray(saved) && saved.length > 10) {
+            localStorage.setItem('calc_history', JSON.stringify(this.history));
+          }
+        } catch (e) {
+          this.history = [];
+        }
 
         this.initAudio();
         this.cacheDOM();
@@ -1068,6 +1088,7 @@
           modeText: document.getElementById('modeText'),
           historyToggle: document.getElementById('btnHistoryToggle'),
           historyDrawer: document.getElementById('historyDrawer'),
+          historyBadge: document.getElementById('historyBadge'),
           historyList: document.getElementById('historyList'),
           btnClearHistory: document.getElementById('btnClearHistory'),
           btnCloseHistory: document.getElementById('btnCloseHistory'),
@@ -1506,12 +1527,21 @@
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         this.history.unshift(item);
-        if (this.history.length > 50) this.history.pop();
+        while (this.history.length > 10) {
+          this.history.pop();
+        }
         localStorage.setItem('calc_history', JSON.stringify(this.history));
         this.renderHistory();
       }
 
       renderHistory() {
+        if (this.dom.historyBadge) {
+          this.dom.historyBadge.textContent = `${this.history.length}/10`;
+        }
+        if (this.dom.historyToggle) {
+          this.dom.historyToggle.title = `Riwayat Hitungan (${this.history.length}/10)`;
+        }
+
         if (!this.history || this.history.length === 0) {
           this.dom.historyList.innerHTML = `
             <div class="empty-history">
@@ -1521,6 +1551,7 @@
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
               <p>Belum ada riwayat hitungan</p>
+              <small style="opacity: 0.7; font-size: 0.78rem;">Maksimal 10 perhitungan terakhir</small>
             </div>
           `;
           return;
