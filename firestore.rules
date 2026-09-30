@@ -2,8 +2,8 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /calc_history/{document=**} {
-      // Mengizinkan baca & tulis riwayat perhitungan publik
+    match /{document=**} {
+      // Mengizinkan baca & tulis untuk riwayat perhitungan dan status pengguna aktif
       allow read, write: if true;
     }
   }

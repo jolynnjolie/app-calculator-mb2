@@ -273,6 +273,96 @@
       gap: 3px;
     }
 
+    /* Active Users Live Presence */
+    .active-users-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .active-users-pill:hover {
+      background: rgba(34, 197, 94, 0.22);
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .live-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      display: inline-block;
+      animation: pulseAnim 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseAnim {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    .active-users-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 230px;
+      background: var(--history-bg);
+      border: 1px solid var(--calc-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      backdrop-filter: blur(16px);
+      text-align: left;
+    }
+
+    .active-users-dropdown.show {
+      display: flex;
+    }
+
+    .active-users-dropdown-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 4px;
+    }
+
+    .active-user-entry {
+      font-size: 0.76rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .active-user-entry .self-tag {
+      font-size: 0.65rem;
+      background: rgba(99, 102, 241, 0.25);
+      color: #a5b4fc;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
     .brand-icon {
       width: 30px;
       height: 30px;
@@ -692,6 +782,38 @@
       transition: all 0.2s ease;
     }
 
+    .history-item-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.72rem;
+    }
+
+    .history-device-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.7rem;
+    }
+
+    .history-device-tag.is-self {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .history-item-time {
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     .history-item:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: var(--accent-glow);
@@ -825,6 +947,19 @@
             <svg viewBox="0 0 24 24"><path d="M4.62 16.03l2.84-15.34a.75.75 0 011.38-.2l3.41 6.55-7.63 8.99zm14.76 0l-2.07-3.92-3.15-6a.75.75 0 00-1.33 0l-1.92 3.65 8.47 6.27zm-14.76 1.77l8.28 4.67a1.5 1.5 0 001.46 0l8.3-4.67-8.99-6.66-9.05 6.66z"/></svg>
             Firebase
           </span>
+          <div class="active-users-pill" id="activeUsersPill" title="Klik untuk melihat perangkat yang sedang aktif">
+            <span class="live-pulse"></span>
+            <span id="activeUsersText">1 Online</span>
+            <div class="active-users-dropdown" id="activeUsersDropdown">
+              <div class="active-users-dropdown-title">Perangkat Sedang Aktif:</div>
+              <div class="active-users-dropdown-list" id="activeUsersList">
+                <div class="active-user-entry">
+                  <span>💻 Perangkat Ini</span>
+                  <span class="self-tag">Anda</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="controls-group">
@@ -1156,6 +1291,10 @@
           historyBadge: document.getElementById('historyBadge'),
           cloudSyncTag: document.getElementById('cloudSyncTag'),
           brandCloudBadge: document.getElementById('brandCloudBadge'),
+          activeUsersPill: document.getElementById('activeUsersPill'),
+          activeUsersText: document.getElementById('activeUsersText'),
+          activeUsersDropdown: document.getElementById('activeUsersDropdown'),
+          activeUsersList: document.getElementById('activeUsersList'),
           historyList: document.getElementById('historyList'),
           btnClearHistory: document.getElementById('btnClearHistory'),
           btnCloseHistory: document.getElementById('btnCloseHistory'),
@@ -1251,6 +1390,19 @@
         });
 
         this.dom.displayMain.addEventListener('click', () => this.copyResult());
+
+        // Active users dropdown toggle
+        if (this.dom.activeUsersPill && this.dom.activeUsersDropdown) {
+          this.dom.activeUsersPill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.dom.activeUsersDropdown.classList.toggle('show');
+          });
+          document.addEventListener('click', (e) => {
+            if (!this.dom.activeUsersPill.contains(e.target)) {
+              this.dom.activeUsersDropdown.classList.remove('show');
+            }
+          });
+        }
 
         // Keyboard handler
         window.addEventListener('keydown', (e) => this.handleKeyboard(e));
@@ -1589,28 +1741,54 @@
 
       initFirebaseSync() {
         const setupSync = () => {
-          if (!window.firebaseSync || typeof window.firebaseSync.subscribeToHistory !== 'function') return;
+          if (!window.firebaseSync) return;
 
-          window.firebaseSync.subscribeToHistory(
-            (cloudRecords) => {
-              if (Array.isArray(cloudRecords) && cloudRecords.length > 0) {
-                this.history = cloudRecords.slice(0, 10);
-                localStorage.setItem('calc_history', JSON.stringify(this.history));
-                this.renderHistory();
+          // Subscribe to live history records
+          if (typeof window.firebaseSync.subscribeToHistory === 'function') {
+            window.firebaseSync.subscribeToHistory(
+              (cloudRecords) => {
+                if (Array.isArray(cloudRecords) && cloudRecords.length > 0) {
+                  this.history = cloudRecords.slice(0, 10);
+                  localStorage.setItem('calc_history', JSON.stringify(this.history));
+                  this.renderHistory();
+                }
+                this.updateCloudStatus(true);
+              },
+              (err) => {
+                console.warn('Firebase Firestore sync notice:', err);
+                this.updateCloudStatus(false);
               }
-              this.updateCloudStatus(true);
-            },
-            (err) => {
-              console.warn('Firebase Firestore sync notice:', err);
-              this.updateCloudStatus(false);
-            }
-          );
+            );
+          }
+
+          // Subscribe to real-time active users presence
+          if (typeof window.firebaseSync.initPresenceTracking === 'function') {
+            window.firebaseSync.initPresenceTracking((activeUsers) => {
+              this.updateActiveUsersUI(activeUsers);
+            });
+          }
         };
 
         if (window.firebaseSync) {
           setupSync();
         } else {
           window.addEventListener('firebase-ready', () => setupSync(), { once: true });
+        }
+      }
+
+      updateActiveUsersUI(users) {
+        if (!Array.isArray(users)) return;
+        const count = users.length || 1;
+        if (this.dom.activeUsersText) {
+          this.dom.activeUsersText.textContent = `${count} Online`;
+        }
+        if (this.dom.activeUsersList) {
+          this.dom.activeUsersList.innerHTML = users.map(u => `
+            <div class="active-user-entry">
+              <span>${u.label}</span>
+              ${u.isSelf ? '<span class="self-tag">Anda</span>' : ''}
+            </div>
+          `).join('');
         }
       }
 
@@ -1630,10 +1808,14 @@
       }
 
       addHistoryRecord(expression, result) {
+        const myDeviceId = window.firebaseSync ? window.firebaseSync.getDeviceId() : '';
+        const myDeviceLabel = window.firebaseSync ? window.firebaseSync.getDeviceLabel() : '💻 Perangkat Ini';
         const item = {
           expr: expression,
           res: result,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          device: myDeviceLabel,
+          deviceId: myDeviceId
         };
         this.history.unshift(item);
         while (this.history.length > 10) {
@@ -1671,12 +1853,22 @@
           return;
         }
 
-        this.dom.historyList.innerHTML = this.history.map((item, index) => `
-          <div class="history-item" data-index="${index}" title="Gunakan nilai ini">
-            <div class="history-item-expr">${item.expr} =</div>
-            <div class="history-item-res">${item.res}</div>
-          </div>
-        `).join('');
+        const currentDeviceId = window.firebaseSync ? window.firebaseSync.getDeviceId() : '';
+
+        this.dom.historyList.innerHTML = this.history.map((item, index) => {
+          const isSelf = item.deviceId && item.deviceId === currentDeviceId;
+          const deviceLabel = item.device || (isSelf ? '💻 Perangkat Ini' : '💻 Perangkat Lain');
+          return `
+            <div class="history-item" data-index="${index}" title="Gunakan nilai ini">
+              <div class="history-item-meta">
+                <span class="history-device-tag ${isSelf ? 'is-self' : ''}">${deviceLabel}</span>
+                <span class="history-item-time">${item.time || ''}</span>
+              </div>
+              <div class="history-item-expr">${item.expr} =</div>
+              <div class="history-item-res">${item.res}</div>
+            </div>
+          `;
+        }).join('');
 
         this.dom.historyList.querySelectorAll('.history-item').forEach(el => {
           el.addEventListener('click', () => {

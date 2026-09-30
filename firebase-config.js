@@ -5,6 +5,7 @@ import {
   getFirestore,
   collection,
   addDoc,
+  setDoc,
   query,
   orderBy,
   limit,
@@ -36,20 +37,70 @@ isSupported().then((supported) => {
   }
 }).catch(() => {});
 
-const COLLECTION_NAME = "calc_history";
+const COLLECTION_HISTORY = "calc_history";
+const COLLECTION_USERS = "active_users";
 const MAX_HISTORY = 10;
+
+/**
+ * Gets or creates a persistent device ID for this browser
+ */
+export function getDeviceId() {
+  let id = localStorage.getItem("calc_device_id");
+  if (!id) {
+    id = "dev_" + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem("calc_device_id", id);
+  }
+  return id;
+}
+
+/**
+ * Generates an informative human-readable label with device & browser type
+ */
+export function getDeviceLabel() {
+  const ua = navigator.userAgent;
+  let os = "Desktop";
+  let icon = "💻";
+
+  if (/iphone/i.test(ua)) {
+    os = "iPhone";
+    icon = "📱";
+  } else if (/ipad/i.test(ua)) {
+    os = "iPad";
+    icon = "📱";
+  } else if (/android/i.test(ua)) {
+    os = "Android";
+    icon = "📱";
+  } else if (/macintosh|mac os x/i.test(ua)) {
+    os = "Mac";
+    icon = "💻";
+  } else if (/windows/i.test(ua)) {
+    os = "Windows";
+    icon = "💻";
+  } else if (/linux/i.test(ua)) {
+    os = "Linux";
+    icon = "💻";
+  }
+
+  let browser = "";
+  if (/edg/i.test(ua)) browser = "Edge";
+  else if (/chrome/i.test(ua)) browser = "Chrome";
+  else if (/firefox/i.test(ua)) browser = "Firefox";
+  else if (/safari/i.test(ua)) browser = "Safari";
+
+  return `${icon} ${os}${browser ? ' • ' + browser : ''}`;
+}
 
 /**
  * Prunes Firestore documents so only the latest MAX_HISTORY records exist.
  */
 async function pruneOldRecords() {
   try {
-    const qAll = query(collection(db, COLLECTION_NAME), orderBy("timestamp", "desc"));
+    const qAll = query(collection(db, COLLECTION_HISTORY), orderBy("timestamp", "desc"));
     const snapAll = await getDocs(qAll);
     if (snapAll.size > MAX_HISTORY) {
       const docsToDelete = snapAll.docs.slice(MAX_HISTORY);
       for (const d of docsToDelete) {
-        await deleteDoc(doc(db, COLLECTION_NAME, d.id));
+        await deleteDoc(doc(db, COLLECTION_HISTORY, d.id));
       }
     }
   } catch (err) {
@@ -58,7 +109,7 @@ async function pruneOldRecords() {
 }
 
 /**
- * Saves a calculation record to Firestore and ensures max 10 records are kept.
+ * Saves a calculation record to Firestore with device info and ensures max 10 records are kept.
  */
 export async function saveCalculationToCloud(expression, result) {
   try {
@@ -68,9 +119,11 @@ export async function saveCalculationToCloud(expression, result) {
       expr: expression,
       res: result,
       time: timeStr,
+      device: getDeviceLabel(),
+      deviceId: getDeviceId(),
       timestamp: timestamp
     };
-    await addDoc(collection(db, COLLECTION_NAME), item);
+    await addDoc(collection(db, COLLECTION_HISTORY), item);
     pruneOldRecords();
     return true;
   } catch (err) {
@@ -84,8 +137,8 @@ export async function saveCalculationToCloud(expression, result) {
  */
 export async function clearCloudHistory() {
   try {
-    const snap = await getDocs(collection(db, COLLECTION_NAME));
-    const deletes = snap.docs.map((d) => deleteDoc(doc(db, COLLECTION_NAME, d.id)));
+    const snap = await getDocs(collection(db, COLLECTION_HISTORY));
+    const deletes = snap.docs.map((d) => deleteDoc(doc(db, COLLECTION_HISTORY, d.id)));
     await Promise.all(deletes);
     return true;
   } catch (err) {
@@ -100,7 +153,7 @@ export async function clearCloudHistory() {
 export function subscribeToHistory(onUpdate, onError) {
   try {
     const q = query(
-      collection(db, COLLECTION_NAME),
+      collection(db, COLLECTION_HISTORY),
       orderBy("timestamp", "desc"),
       limit(MAX_HISTORY)
     );
@@ -116,6 +169,8 @@ export function subscribeToHistory(onUpdate, onError) {
             expr: data.expr,
             res: data.res,
             time: data.time || new Date(data.timestamp || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            device: data.device || "💻 Perangkat Lain",
+            deviceId: data.deviceId || "",
             timestamp: data.timestamp || 0
           });
         });
@@ -137,6 +192,72 @@ export function subscribeToHistory(onUpdate, onError) {
   }
 }
 
+/**
+ * Tracks real-time active users across all devices.
+ */
+export function initPresenceTracking(onActiveUsersChange) {
+  const deviceId = getDeviceId();
+  const deviceLabel = getDeviceLabel();
+
+  // Send initial and recurring heartbeats
+  const sendHeartbeat = async () => {
+    try {
+      await setDoc(doc(db, COLLECTION_USERS, deviceId), {
+        deviceId,
+        deviceLabel,
+        lastSeen: Date.now()
+      }, { merge: true });
+    } catch (e) {
+      // presence error handled safely
+    }
+  };
+
+  sendHeartbeat();
+  const heartbeatTimer = setInterval(sendHeartbeat, 20000);
+
+  // Remove presence on window unload/pagehide
+  const removePresence = () => {
+    try {
+      deleteDoc(doc(db, COLLECTION_USERS, deviceId)).catch(() => {});
+    } catch (e) {}
+  };
+  window.addEventListener("beforeunload", removePresence);
+  window.addEventListener("pagehide", removePresence);
+
+  // Listen to all active users
+  try {
+    const unsubscribe = onSnapshot(collection(db, COLLECTION_USERS), (snapshot) => {
+      const now = Date.now();
+      const activeList = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        // Considered online if heartbeat received in last 45 seconds
+        if (data.lastSeen && (now - data.lastSeen < 45000)) {
+          activeList.push({
+            id: docSnap.id,
+            label: data.deviceLabel || "📱 Perangkat",
+            isSelf: docSnap.id === deviceId,
+            lastSeen: data.lastSeen
+          });
+        }
+      });
+      if (typeof onActiveUsersChange === "function") {
+        onActiveUsersChange(activeList);
+      }
+    }, (err) => {
+      console.warn("Presence snapshot warning:", err);
+    });
+
+    return () => {
+      clearInterval(heartbeatTimer);
+      unsubscribe();
+    };
+  } catch (err) {
+    console.warn("Presence init warning:", err);
+    return () => clearInterval(heartbeatTimer);
+  }
+}
+
 // Expose globally on window for easy access from main calculator script
 window.firebaseSync = {
   app,
@@ -144,6 +265,9 @@ window.firebaseSync = {
   saveCalculationToCloud,
   clearCloudHistory,
   subscribeToHistory,
+  initPresenceTracking,
+  getDeviceId,
+  getDeviceLabel,
   config: firebaseConfig,
   isLive: false
 };
