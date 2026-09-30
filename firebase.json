@@ -4,6 +4,7 @@
     "ignore": [
       "firebase.json",
       ".firebaserc",
+      "firestore.rules",
       "package.json",
       "package-lock.json",
       "README.md",
@@ -16,5 +17,8 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

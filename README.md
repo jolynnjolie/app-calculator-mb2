@@ -4,8 +4,9 @@ Aplikasi kalkulator berbasis web (Single File HTML) yang interaktif, modern, dan
 
 ## 🚀 Fitur Utama
 - **Desain Modern Glassmorphism**: Tampilan futuristik dengan ambient glow dan pilihan tema (Deep Dark, Cyber Neon, Sunset Amber, Clean Light).
+- **Sinkronisasi Riwayat Cloud Real-time**: Riwayat perhitungan otomatis tersimpan ke **Firebase Cloud Firestore**, sehingga riwayat langsung sinkron di semua perangkat (laptop, ponsel, tablet) secara real-time.
+- **Batas Otomatis Maksimal 10 Riwayat**: Hanya 10 riwayat perhitungan terbaru yang disimpan (riwayat lama otomatis dihapus dari Cloud dan lokal).
 - **Mode Ilmiah Lengkap**: Trigonometri (sin, cos, tan), sudut DEG/RAD, pangkat (x², xʸ), akar (√x), logaritma (log, ln), faktorial (x!), konstanta (π, e), dan kebalikan (1/x).
-- **Riwayat Perhitungan**: Riwayat perhitungan tersimpan di `localStorage` dan dapat diklik untuk digunakan kembali.
 - **Fungsi Memori**: MC, MR, M+, M-, dan MS dengan indikator status.
 - **Efek Suara Native**: Disintesis dengan HTML5 Web Audio API (100% offline tanpa file audio eksternal).
 - **Dukungan Keyboard Penuh**: Gunakan keyboard langsung untuk mengetik angka dan operasi matematika.
