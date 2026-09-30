@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Firebase Integration -->
+  <script type="module" src="./firebase-config.js"></script>
+
   <style>
     :root {
       --bg-gradient: radial-gradient(circle at 20% 20%, #1e1e38 0%, #0d0f18 100%);
@@ -213,6 +216,27 @@
       font-weight: 700;
       font-size: 1.15rem;
       letter-spacing: -0.02em;
+    }
+
+    .brand-cloud-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      letter-spacing: 0.02em;
+      cursor: default;
+    }
+
+    .brand-cloud-badge svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
     }
 
     .brand-icon {
@@ -762,6 +786,10 @@
         <div class="brand">
           <div class="brand-icon">∑</div>
           <span>Kalkulator</span>
+          <span class="brand-cloud-badge" title="Terhubung ke Firebase (mycalculator-d4709)" aria-label="Firebase Connected">
+            <svg viewBox="0 0 24 24"><path d="M4.62 16.03l2.84-15.34a.75.75 0 011.38-.2l3.41 6.55-7.63 8.99zm14.76 0l-2.07-3.92-3.15-6a.75.75 0 00-1.33 0l-1.92 3.65 8.47 6.27zm-14.76 1.77l8.28 4.67a1.5 1.5 0 001.46 0l8.3-4.67-8.99-6.66-9.05 6.66z"/></svg>
+            Firebase
+          </span>
         </div>
 
         <div class="controls-group">

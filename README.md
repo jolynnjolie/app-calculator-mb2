@@ -19,17 +19,17 @@ npm start
 ```
 
 ## 🔥 Setup & Deploy ke Firebase Hosting
-1. Login ke Firebase:
+Project ini telah terhubung ke Firebase Project ID: `mycalculator-d4709`.
+
+1. Login ke Firebase (cukup sekali):
    ```bash
    npm run login
+   # atau: npx firebase login
    ```
-2. Hubungkan ke project Firebase Anda:
-   ```bash
-   npx firebase use --add
-   ```
-3. Deploy ke Firebase:
+2. Deploy ke Firebase Hosting:
    ```bash
    npm run deploy
+   # atau: npm run deploy:hosting
    ```
 
 ## 🔗 Repository
